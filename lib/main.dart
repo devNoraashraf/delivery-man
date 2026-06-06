@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -25,29 +24,19 @@ import 'package:resturant_delivery_boy/utill/app_constants.dart';
 
 import 'di_container.dart' as di;
 import 'features/order/providers/time_provider.dart';
+import 'firebase_options.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 AndroidNotificationChannel? channel;
 final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   stopService();
 
-  if(Platform.isIOS) {
-    await Firebase.initializeApp();
-  }else {
-    await Firebase.initializeApp(options: const FirebaseOptions(
-      apiKey: 'AIzaSyA40XT2LSjEI_V9LCfp8YDE2qN_P9Fcduw', ///current_key
-      appId: '1:384321080318:android:eb44f7600efcf9452c0eaf', /// mobilesdk_app_id
-      messagingSenderId: '384321080318', /// project_number
-      projectId: 'gem-b5006', /// project_id
-    ));
-
-  }
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   ///firebase crashlytics
   // FlutterError.onError = (errorDetails) {
@@ -61,7 +50,7 @@ Future<void> main() async {
 
   await di.init();
 
-  if(defaultTargetPlatform == TargetPlatform.android){
+  if (defaultTargetPlatform == TargetPlatform.android) {
     channel = const AndroidNotificationChannel(
       'high_importance_channel',
       'High Importance Notifications',
@@ -71,23 +60,31 @@ Future<void> main() async {
   await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
   FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (context) => di.sl<ThemeProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<SplashProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<LanguageProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<LocalizationProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<AuthProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<LocalizationProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ProfileProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<OrderProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<TrackerProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ChatProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<PermissionHandlerProvider>()),
-      ChangeNotifierProvider(create: (context) => di.sl<TimerProvider>()),
-    ],
-    child: const MyApp(),
-  ));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => di.sl<ThemeProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<SplashProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<LanguageProvider>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<LocalizationProvider>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<AuthProvider>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<LocalizationProvider>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<ProfileProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<OrderProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<TrackerProvider>()),
+        ChangeNotifierProvider(create: (context) => di.sl<ChatProvider>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<PermissionHandlerProvider>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<TimerProvider>()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -95,7 +92,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final Size size = MediaQuery.of(context).size;
 
     List<Locale> locals = [];
@@ -104,31 +100,32 @@ class MyApp extends StatelessWidget {
     }
 
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(size.width < 380 ?  0.7 : 1)),
-      child: SafeArea(top: false, child: MaterialApp(
-        title: AppConstants.appName,
-        navigatorKey: _navigatorKey,
-        debugShowCheckedModeBanner: false,
-        theme: Provider.of<ThemeProvider>(context).darkTheme ? dark : light,
-        locale: Provider.of<LocalizationProvider>(context).locale,
-        localizationsDelegates: const [
-          AppLocalization.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: locals,
-        home: const SplashScreen(),
-      )),
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(size.width < 380 ? 0.7 : 1)),
+      child: SafeArea(
+        top: false,
+        child: MaterialApp(
+          title: AppConstants.appName,
+          navigatorKey: _navigatorKey,
+          debugShowCheckedModeBanner: false,
+          theme: Provider.of<ThemeProvider>(context).darkTheme ? dark : light,
+          locale: Provider.of<LocalizationProvider>(context).locale,
+          localizationsDelegates: const [
+            AppLocalization.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: locals,
+          home: const SplashScreen(),
+        ),
+      ),
     );
   }
 }
-
-
 
 class Get {
   static BuildContext? get context => _navigatorKey.currentContext;
   static NavigatorState? get navigator => _navigatorKey.currentState;
 }
-
-
